@@ -1,0 +1,240 @@
+/* Portada editorial: sustituye el panel azul por una escena deportiva cálida. */
+.hero-art.hero-photo {
+    min-height: 390px;
+    overflow: hidden;
+    isolation: isolate;
+    border: 1px solid rgba(226, 244, 232, .32);
+    border-radius: 24px 64px 24px 64px;
+    background-color: #26372c;
+    background-repeat: no-repeat;
+    background-position: 68% center;
+    background-size: cover;
+    box-shadow: 20px 22px 0 rgba(186, 255, 76, .72), inset 0 0 90px rgba(7, 13, 11, .28);
+}
+
+.hero-art.hero-photo::before {
+    content: '';
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(13, 29, 24, .83) 0%, rgba(13, 29, 24, .42) 39%, rgba(13, 29, 24, .02) 72%), linear-gradient(0deg, rgba(10, 23, 18, .54) 0%, transparent 45%);
+}
+
+.hero-photo-wash {
+    position: absolute;
+    z-index: 0;
+    width: 210px;
+    height: 210px;
+    right: -54px;
+    top: -64px;
+    border: 1px solid rgba(211, 255, 159, .75);
+    border-radius: 50%;
+    box-shadow: 0 0 0 20px rgba(211, 255, 159, .08), 0 0 0 45px rgba(211, 255, 159, .05);
+}
+
+.hero-grid {
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    opacity: .18;
+    background-image: linear-gradient(rgba(227, 255, 232, .55) 1px, transparent 1px), linear-gradient(90deg, rgba(227, 255, 232, .55) 1px, transparent 1px);
+    background-size: 31px 31px;
+    mask-image: linear-gradient(90deg, #000, transparent 72%);
+}
+
+.hero-monogram {
+    position: absolute;
+    z-index: 1;
+    top: 44px;
+    left: 42px;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 6px 12px 10px 4px;
+    color: #f7fbef;
+    border-bottom: 1px solid rgba(239, 255, 226, .62);
+    font-size: clamp(68px, 8vw, 103px);
+    font-weight: 800;
+    line-height: .7;
+    letter-spacing: -9px;
+}
+
+.hero-monogram span {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-style: italic
+}
+
+.hero-monogram strong {
+    color: #baff4c;
+    font-family: 'DM Mono', monospace;
+    font-size: 30px;
+    letter-spacing: -2px
+}
+
+.hero-tag {
+    position: absolute;
+    z-index: 1;
+    top: 32px;
+    right: 30px;
+    margin: 0;
+    color: #f6fbeb;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    line-height: 1.55;
+    letter-spacing: 1px;
+    text-align: right;
+    text-shadow: 0 1px 14px rgba(0, 0, 0, .72);
+}
+
+.hero-tag b {
+    color: #d0ff71;
+    font-weight: 600
+}
+
+.hero-sports-label {
+    position: absolute;
+    z-index: 1;
+    right: 29px;
+    bottom: 31px;
+    display: flex;
+    gap: 7px;
+}
+
+.hero-sports-label span {
+    padding: 6px 8px;
+    color: #142417;
+    border-radius: 999px;
+    background: #d0ff71;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .7px;
+}
+
+.hero-community {
+    position: absolute;
+    z-index: 1;
+    bottom: 31px;
+    left: 42px;
+    margin: 0;
+    color: #f5fbf1;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    line-height: 1.45;
+    letter-spacing: .35px;
+    text-shadow: 0 1px 12px rgba(0, 0, 0, .62);
+}
+
+.hero-community b {
+    color: #d0ff71;
+    font-weight: 600
+}
+
+/* Las portadas de los seis eventos se muestran más completas y alineadas. */
+.event-visual {
+    height: 190px !important;
+    background-repeat: no-repeat !important;
+    background-size: cover !important;
+    transition: transform .25s ease, filter .25s ease;
+}
+
+.event-card:hover .event-visual {
+    filter: saturate(1.08);
+    transform: scale(1.012)
+}
+
+.availability.cancelled {
+    color: #fff;
+    background: #b83c50
+}
+
+.availability.closed {
+    color: #412908;
+    background: #ffd16a
+}
+
+.modal-unavailable {
+    margin: 22px 0 0;
+    padding: 13px 15px;
+    border: 1px solid rgba(255, 209, 106, .4);
+    border-radius: 10px;
+    color: #ffe2a0;
+    background: rgba(126, 82, 11, .2)
+}
+
+@media (max-width:800px) {
+    .hero-art.hero-photo {
+        min-height: 330px;
+        width: min(460px, 92%);
+        background-position: 65% center
+    }
+
+    .hero-monogram {
+        top: 37px;
+        left: 32px
+    }
+
+    .hero-tag {
+        top: 25px;
+        right: 23px
+    }
+
+    .hero-community {
+        bottom: 25px;
+        left: 32px
+    }
+
+    .hero-sports-label {
+        right: 22px;
+        bottom: 25px
+    }
+
+    .event-visual {
+        height: 184px !important
+    }
+}
+
+@media (max-width:530px) {
+    .hero-art.hero-photo {
+        min-height: 292px;
+        border-radius: 18px 44px 18px 44px;
+        background-position: 62% center
+    }
+
+    .hero-monogram {
+        top: 39px;
+        left: 25px;
+        font-size: 70px
+    }
+
+    .hero-monogram strong {
+        font-size: 22px
+    }
+
+    .hero-tag {
+        top: 20px;
+        right: 19px;
+        font-size: 8px
+    }
+
+    .hero-community {
+        bottom: 22px;
+        left: 25px;
+        font-size: 9px
+    }
+
+    .hero-sports-label {
+        right: 18px;
+        bottom: 21px;
+        gap: 4px
+    }
+
+    .hero-sports-label span {
+        padding: 5px 6px;
+        font-size: 8px
+    }
+
+    .event-visual {
+        height: 175px !important
+    }
+}
