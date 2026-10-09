@@ -1,0 +1,154 @@
+.checkin-section {
+  min-height: 500px;
+  padding: 74px 35px 92px;
+  border-top: 1px solid rgba(220, 239, 250, .11);
+}
+
+.checkin-heading {
+  max-width: 610px;
+  margin-bottom: 28px;
+}
+
+.checkin-heading h2 {
+  margin: 0;
+  color: #f5f8fa;
+  font-size: clamp(30px, 4vw, 45px);
+  letter-spacing: -2.8px;
+}
+
+.checkin-heading > p:last-child {
+  margin: 12px 0 0;
+  color: #9eb4c5;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.checkin-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, .8fr);
+  gap: 18px;
+  max-width: 800px;
+}
+
+.checkin-card,
+.checkin-result,
+.checkin-note {
+  border-radius: 15px;
+}
+
+.checkin-card {
+  display: grid;
+  gap: 15px;
+  padding: 27px;
+  border: 1px solid rgba(186, 255, 76, .5);
+  background: #103149;
+}
+
+.checkin-card label {
+  display: grid;
+  gap: 7px;
+  color: #c5d9e4;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.checkin-card input {
+  width: 100%;
+  padding: 12px 13px;
+  border: 1px solid rgba(220, 239, 250, .17);
+  border-radius: 8px;
+  outline: none;
+  color: #f2f7fa;
+  background: #071c30;
+  font-size: 13px;
+}
+
+.checkin-card input:focus {
+  border-color: #baff4c;
+}
+
+.checkin-result,
+.checkin-note {
+  display: flex;
+  gap: 13px;
+  align-items: flex-start;
+  padding: 24px;
+  border: 1px solid rgba(220, 239, 250, .16);
+  background: #0b263d;
+}
+
+.checkin-result > span,
+.checkin-note > span {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: #07192b;
+  background: #baff4c;
+  font-weight: 900;
+}
+
+.checkin-result p,
+.checkin-result h3,
+.checkin-result small,
+.checkin-note p {
+  margin: 0;
+}
+
+.checkin-result p {
+  color: #baff4c;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+
+.checkin-result h3 {
+  margin-top: 6px;
+  color: #f5f8fa;
+  font-size: 17px;
+}
+
+.checkin-result small,
+.checkin-note p {
+  display: block;
+  margin-top: 7px;
+  color: #a9c0cf;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.checkin-result.rechazado {
+  border-color: rgba(255, 184, 168, .6);
+}
+
+.checkin-result.rechazado > span {
+  color: #541923;
+  background: #ffc3bb;
+}
+
+.checkin-result.duplicado {
+  border-color: rgba(255, 204, 115, .5);
+}
+
+.checkin-result.duplicado > span {
+  color: #432900;
+  background: #ffcc73;
+}
+
+.booking-state .attended {
+  color: #08364a;
+  background: #7ee0ef;
+}
+
+@media (max-width: 800px) {
+  .checkin-section { padding: 54px 10px 74px; }
+  .checkin-layout { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 530px) {
+  .checkin-card,
+  .checkin-result,
+  .checkin-note { padding: 22px; }
+}

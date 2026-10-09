@@ -1,86 +1,79 @@
-# Frontend actualizado — EventPass Sports
+# EventPass Sports
 
-Esta carpeta reemplaza solo la parte visual del proyecto anterior. Conserva los mismos endpoints y operaciones de n8n.
+EventPass Sports centraliza el catálogo de eventos deportivos, gestión de usuarios, autenticación, inscripción, lista de espera, cancelaciones, recordatorios, notificaciones y asistente. La interfaz se comunica con n8n mediante webhooks HTTP y los datos operativos se administran con Google Sheets.
 
-| Función | Webhook de n8n | Método |
-| --- | --- | --- |
-| Registro y perfil | /usuarios | POST |
-| Inicio/cierre de sesión | /eventpass/wf02 | POST |
-| Código de Telegram | /eventpass/wf03 | POST |
-| Catálogo | /eventpass/catalogo | GET |
-| Inscripciones | /eventpass/inscripciones | POST |
-| Asistente | URL propia del Chat Trigger WF10 | POST |
+## Examen — Check-in digital
 
-## 1. Sustituir el frontend en Visual Studio Code
+Se incorporó la funcionalidad de control de ingreso de asistentes. La interfaz dispone de la vista **Check-in**, donde el operador registra el ingreso con el identificador de una inscripción y el evento al que corresponde. El workflow **WF11 — Check-in digital** valida la solicitud, persiste cada intento, actualiza la inscripción válida y reutiliza el servicio central de notificaciones.
 
-1. Haz una copia de seguridad de la carpeta raíz de tu proyecto original.
-2. Abre el proyecto original en Visual Studio Code.
-3. Elimina únicamente estos elementos antiguos de la raíz: src, index.html, package.json, package-lock.json, vite.config.js, vercel.json y .gitignore. No borres n8n, docs, las plantillas de Sheets ni los JSON.
-4. Copia todo el contenido de esta carpeta, no la carpeta contenedora, en la raíz de tu proyecto original.
-5. En la terminal integrada ejecuta:
+### Endpoint
 
-~~~bash
-npm install
-copy .env.example .env
-npm run dev
-~~~
+| Uso | Método | Ruta de producción de n8n | Ruta consumida por el frontend |
+| --- | --- | --- | --- |
+| Registro de check-in | `POST` | `/webhook/eventpass/checkin` | `/n8n/webhook/eventpass/checkin` |
 
-En macOS/Linux, el segundo comando es cp .env.example .env.
+### Estructura de la petición
 
-## 2. Conectar el sitio con n8n
+```json
+{
+  "inscripcion_id": "INS-001",
+  "evento_id": "EVT-001"
+}
+```
 
-Abre el archivo .env creado en la raíz y completa solamente estas dos variables:
+### Estructura de la respuesta
 
-~~~env
-VITE_N8N_WEBHOOK_BASE_URL=https://TU_DOMINIO_N8N/webhook
-VITE_N8N_CHAT_URL=https://TU_DOMINIO_N8N/webhook/URL-EXACTA-DEL-CHAT-TRIGGER
-~~~
+```json
+{
+  "ok": true,
+  "data": {
+    "resultado": "EXITOSO",
+    "mensaje": "Check-in realizado correctamente.",
+    "detalle": "Check-in realizado correctamente.",
+    "checkin_id": "CHK-20261009143000-4821",
+    "inscripcion_id": "INS-001",
+    "evento_id": "EVT-001",
+    "fecha_checkin": "2026-10-09T19:30:00.000Z"
+  }
+}
+```
 
-- La primera dirección debe terminar exactamente en /webhook, no en /webhook-test y sin / al final.
-- La segunda debe ser la URL Production POST mostrada por el nodo Chat Trigger EventPass Assistant de WF10. Cópiala desde tu n8n publicado.
-- No modifiques los paths en el código: el frontend usa usuarios, eventpass/wf02, eventpass/wf03, eventpass/catalogo y eventpass/inscripciones.
-- Activa/publica WF01, WF02, WF03, WF05, WF06 y WF10. WF04 es el formulario administrativo, no pertenece al sitio público.
+`resultado` utiliza únicamente los valores `EXITOSO`, `DUPLICADO` o `RECHAZADO`. Las respuestas de duplicado y rechazo preservan la misma estructura y describen el motivo en `detalle`.
 
-### CORS: cambio imprescindible en n8n
+### Validaciones implementadas
 
-Antes de probar desde Vercel, permite el origen de tu sitio:
+- Existencia de la inscripción.
+- Existencia del evento.
+- Correspondencia entre `inscripcion_id` y `evento_id`.
+- Estado de la inscripción igual a `CONFIRMADA`.
+- Ausencia de un check-in previo con resultado `EXITOSO` para la misma inscripción.
 
-1. Despliega primero en Vercel para conocer tu dominio, por ejemplo https://eventpass-sports.vercel.app.
-2. En n8n Cloud, configura los webhooks para permitir ese origen si tu instancia expone dicha opción. En n8n autoalojado, añade o actualiza N8N_CORS_ORIGIN=https://eventpass-sports.vercel.app en la configuración del servidor y reinícialo.
-3. En WF10 → Chat Trigger, en Allowed Origins (CORS) escribe ese mismo dominio. Evita dejar * para la entrega.
-4. Para probar en local, agrega también http://localhost:5173 como origen permitido si tu configuración admite varios orígenes.
+Las inscripciones en `LISTA_ESPERA`, `CANCELADA`, `ASISTIO` u otro estado no permitido generan un resultado `RECHAZADO` y quedan registradas como intento.
 
-Si el navegador muestra “Failed to fetch”, normalmente la URL no termina en /webhook, el workflow no está activo o falta CORS.
+### Persistencia de check-ins
 
-## 3. Pruebas mínimas en el sitio
+El archivo independiente **EP11_Checkin** contiene la hoja obligatoria `Checkins`. Su estructura es:
 
-1. Crea una cuenta e inicia sesión.
-2. En Mi cuenta, genera el código y envía /vincular CODIGO al bot de Telegram.
-3. Vuelve al catálogo, abre un evento y solicita el pase.
-4. Consulta Mis pases y prueba cancelar una inscripción.
-5. Abre el botón flotante del asistente y haz una pregunta informativa.
+| Campo | Descripción |
+| --- | --- |
+| `checkin_id` | Identificador generado para un ingreso exitoso. |
+| `inscripcion_id` | Identificador de la inscripción consultada. |
+| `evento_id` | Identificador del evento recibido. |
+| `usuario_id` | Usuario relacionado con la inscripción cuando existe. |
+| `fecha_checkin` | Fecha y hora ISO del intento. |
+| `resultado` | `EXITOSO`, `RECHAZADO` o `DUPLICADO`. |
+| `detalle` | Resultado legible y trazable de la validación. |
 
-Telegram debe estar vinculado antes de crear una inscripción: WF06 hace ese control, no el frontend.
+Cada solicitud se guarda en `Checkins`. Solamente un resultado `EXITOSO` asigna un `checkin_id` y cambia la inscripción correspondiente de `CONFIRMADA` a `ASISTIO`.
 
-## 4. GitHub y Vercel
+### Idempotencia y notificaciones
 
-Desde la raíz del proyecto completo —donde también están n8n y docs— ejecuta:
+WF11 consulta el historial de `Checkins` antes de registrar la asistencia. Si ya existe un registro `EXITOSO` para la inscripción, no crea un segundo ingreso válido, no actualiza la inscripción y responde `DUPLICADO`.
 
-~~~bash
-git init
-git add .
-git commit -m "Publicar EventPass Sports"
-git branch -M main
-git remote add origin URL_DE_TU_REPOSITORIO_GITHUB
-git push -u origin main
-~~~
+Al completar un check-in válido, WF11 ejecuta **WF09 — Notificaciones** como subworkflow con el evento `CHECKIN_EXITOSO`. La notificación mantiene el servicio central existente para los canales Gmail y Telegram; WF11 no replica esa lógica.
 
-Luego, en Vercel:
+### Archivos del examen
 
-1. Inicia sesión con GitHub y elige Add New → Project.
-2. Importa el repositorio completo.
-3. Vercel detectará Vite. Conserva npm run build como comando de compilación y dist como carpeta de salida.
-4. En Settings → Environment Variables agrega VITE_N8N_WEBHOOK_BASE_URL y VITE_N8N_CHAT_URL con exactamente los valores de tu .env.
-5. Despliega. Cuando obtengas la URL pública, úsala para CORS en n8n y vuelve a desplegar.
-
-Nunca subas .env. Este frontend ya incluye .gitignore y .env.example para mantener las URLs de ejemplo, sin secretos.
+- `n8n/WF11_checkin_digital.json`: export importable del workflow de check-in.
+- `sheets/EP11_Checkin.xlsx`: plantilla del archivo independiente de registro.
+- `docs/CONEXION_Y_PRUEBAS.md`: referencias de conexión y matriz de verificación.
