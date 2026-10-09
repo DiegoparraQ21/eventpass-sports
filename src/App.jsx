@@ -225,7 +225,7 @@ function App() {
       await request('eventpass/inscripciones', { body: { operacion: 'CANCEL', inscripcion_id: id }, token });
       await loadBookings();
       await loadCatalog();
-      notify('Inscripción cancelada. Si hay lista de espera, n8n reasignará el cupo.');
+      notify('Inscripción cancelada. Si hay lista de espera, se te reasignará el cupo.');
     } catch (error) { fail(error); } finally { setBusy(''); }
   }
 

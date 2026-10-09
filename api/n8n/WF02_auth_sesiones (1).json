@@ -1,0 +1,373 @@
+{
+  "name": "WF02_auth_sesiones",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "eventpass/wf02",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "http://localhost:5173"
+        }
+      },
+      "id": "5176c6ec-c0df-487c-87e4-dad9d4c40412",
+      "name": "Entrada Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        448
+      ],
+      "webhookId": "58ae6476-d9fa-4c77-96bf-df40af194af6"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1tLq1pTBGQlwCty6ex9N7r6KaRMlEq1pLPz--iX8pfGA",
+          "mode": "list",
+          "cachedResultName": "EP01_Usuarios",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1tLq1pTBGQlwCty6ex9N7r6KaRMlEq1pLPz--iX8pfGA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1858583105,
+          "mode": "list",
+          "cachedResultName": "Usuarios",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1tLq1pTBGQlwCty6ex9N7r6KaRMlEq1pLPz--iX8pfGA/edit#gid=1858583105"
+        },
+        "options": {}
+      },
+      "id": "8faedb98-42b4-4331-9b4b-3a34e5b00fcd",
+      "name": "Leer usuarios",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        224,
+        448
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dlOSdnI7HAoQaA8d",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1TMWer72gB16ZRwklXX2e7NmR5ss9ki2l6obEsa4f22k",
+          "mode": "list",
+          "cachedResultName": "EP02_Sesiones",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TMWer72gB16ZRwklXX2e7NmR5ss9ki2l6obEsa4f22k/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1751696660,
+          "mode": "list",
+          "cachedResultName": "Sesiones",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TMWer72gB16ZRwklXX2e7NmR5ss9ki2l6obEsa4f22k/edit#gid=1751696660"
+        },
+        "options": {}
+      },
+      "id": "bc6e0d36-b215-42d6-9285-4a169363a4fb",
+      "name": "Leer sesiones",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        448,
+        448
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dlOSdnI7HAoQaA8d",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Reglas puras para copiar a Code Nodes. Persistencia y bloqueo corresponden a n8n.\nconst crypto = require('crypto');\nclass ErrorNegocio extends Error { constructor(status, code, message) { super(message); this.status=status; this.code=code; } }\nconst fail=(s,c,m)=>{throw new ErrorNegocio(s,c,m)};\nconst id=()=>crypto.randomUUID();\nconst email=x=>String(x||'').trim().toLowerCase();\nfunction hashPassword(password, salt=crypto.randomBytes(16).toString('hex')) {\n  if(typeof password!=='string'||password.length<12||password.length>128) fail(400,'PASSWORD_INVALIDA','Usa entre 12 y 128 caracteres');\n  return {password_salt:salt,password_hash:crypto.scryptSync(password,salt,64).toString('hex')};\n}\nfunction verifyPassword(password, u) {\n  if (\n    typeof password !== 'string' ||\n    password.length > 128 ||\n    !u?.password_salt ||\n    !u?.password_hash\n  ) {\n    return false;\n  }\n\n  const actual = crypto.pbkdf2Sync(\n    password,\n    u.password_salt,\n    120000,\n    32,\n    'sha256'\n  );\n\n  const stored = Buffer.from(u.password_hash, 'hex');\n\n  return (\n    stored.length === actual.length &&\n    crypto.timingSafeEqual(actual, stored)\n  );\n}\nconst publicUser=({usuario_id,nombre,email_normalizado,estado})=>({usuario_id,nombre,email_normalizado,estado});\nfunction createUser(body,users,now=new Date()) {\n  const mail=email(body.email),nombre=String(body.nombre||'').trim();\n  if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(mail)||!nombre||nombre.length>100) fail(400,'DATOS_INVALIDOS','Revisa nombre y correo');\n  if(users.some(u=>u.email_normalizado===mail)) fail(409,'EMAIL_DUPLICADO','El correo ya existe');\n  return {usuario_id:id(),nombre,email_normalizado:mail,...hashPassword(body.password),estado:'ACTIVO',fecha_registro:now.toISOString(),fecha_actualizacion:now.toISOString()};\n}\nfunction validSession(token,sessions,users,now=new Date()) {\n  const s=sessions.find(s=>s.session_token===token&&token);\n  if(!s||s.estado!=='ACTIVA'||!Number.isFinite(Date.parse(s.expira_en))||Date.parse(s.expira_en)<=+now) fail(401,'SESION_INVALIDA','Inicia sesión nuevamente');\n  const u=users.find(u=>u.usuario_id===s.usuario_id&&u.estado==='ACTIVO');\n  if(!u) fail(401,'USUARIO_INACTIVO','Cuenta inactiva');\n  return {session:s,user:u};\n}\nfunction login(body,users,now=new Date()) {\n  const u=users.find(u=>u.email_normalizado===email(body.email));\n  if(!u||u.estado!=='ACTIVO'||!verifyPassword(body.password,u)) fail(401,'CREDENCIALES_INVALIDAS','Correo o contraseña inválidos');\n  return {session_id:id(),usuario_id:u.usuario_id,session_token:crypto.randomBytes(32).toString('hex'),creada_en:now.toISOString(),expira_en:new Date(+now+8*3600000).toISOString(),estado:'ACTIVA',cerrada_en:'',ultima_validacion:now.toISOString()};\n}\nconst eventTime=e=>Date.parse(`${e.fecha}T${e.hora}:00-05:00`);\nconst confirmed=(eventId,rows)=>rows.filter(r=>r.evento_id===eventId&&r.estado==='CONFIRMADA').length;\nconst available=(e,rows)=>Math.max(0,Number(e.capacidad)-confirmed(e.evento_id,rows));\nfunction catalog(events,rows,{evento_id,categoria}={},now=new Date()) {\n  return events.filter(e=>e.estado==='PUBLICADO'&&eventTime(e)>+now&&(!evento_id||e.evento_id===evento_id)&&(!categoria||e.categoria===categoria)).map(e=>({...e,cupos_disponibles:available(e,rows)}));\n}\nfunction createEnrollment(body,user,links,event,rows,now=new Date()) {\n  if(user.estado!=='ACTIVO') fail(401,'USUARIO_INACTIVO','Cuenta inactiva');\n  if(!links.some(l=>l.usuario_id===user.usuario_id&&l.estado==='ACTIVA')) fail(409,'TELEGRAM_REQUERIDO','Vincula Telegram primero');\n  if(!event) fail(404,'EVENTO_NO_EXISTE','Evento no encontrado');\n  if(event.estado!=='PUBLICADO'||!Number.isFinite(eventTime(event))||eventTime(event)<=+now) fail(409,'EVENTO_NO_DISPONIBLE','Evento cerrado o iniciado');\n  const old=rows.find(r=>r.usuario_id===user.usuario_id&&r.evento_id===event.evento_id&&['CONFIRMADA','LISTA_ESPERA'].includes(r.estado));\n  if(old) return {row:old,created:false};\n  const estado=available(event,rows)>0?'CONFIRMADA':'LISTA_ESPERA';\n  return {created:true,row:{inscripcion_id:id(),usuario_id:user.usuario_id,evento_id:event.evento_id,estado,fecha_inscripcion:now.toISOString(),fecha_actualizacion:now.toISOString(),nombre_acreditacion:String(body.nombre_acreditacion||user.nombre).slice(0,100),observaciones:String(body.observaciones||'').slice(0,500),origen:'WEB',orden_espera:estado==='LISTA_ESPERA'?Math.max(0,...rows.filter(r=>r.evento_id===event.evento_id).map(r=>Number(r.orden_espera)||0))+1:''}};\n}\nfunction cancelEnrollment(row,user,now=new Date()) {\n  if(!row||row.usuario_id!==user.usuario_id) fail(404,'INSCRIPCION_NO_EXISTE','Inscripción no encontrada');\n  return {...row,estado:'CANCELADA',fecha_actualizacion:now.toISOString()};\n}\nfunction promotions(events,rows,users,links,now=new Date()) {\n  const promoted=[];\n  for(const e of events.filter(e=>e.estado==='PUBLICADO'&&eventTime(e)>+now)) {\n    let seats=available(e,rows);\n    const waiting=rows.filter(r=>r.evento_id===e.evento_id&&r.estado==='LISTA_ESPERA').sort((a,b)=>Date.parse(a.fecha_inscripcion)-Date.parse(b.fecha_inscripcion)||a.inscripcion_id.localeCompare(b.inscripcion_id));\n    for(const r of waiting) {\n      if(!seats) break;\n      if(!users.some(u=>u.usuario_id===r.usuario_id&&u.estado==='ACTIVO')||!links.some(l=>l.usuario_id===r.usuario_id&&l.estado==='ACTIVA')) continue;\n      promoted.push({...r,estado:'CONFIRMADA',fecha_actualizacion:now.toISOString()}); seats--;\n    }\n  }\n  return promoted;\n}\nfunction reminderCandidates(events,rows,previous,now=new Date()) {\n  const out=[];\n  for(const e of events.filter(e=>e.estado==='PUBLICADO'&&eventTime(e)>+now&&eventTime(e)-now<=24*3600000)) {\n    for(const r of rows.filter(r=>r.evento_id===e.evento_id&&r.estado==='CONFIRMADA')) {\n      const key=`${r.usuario_id}|${e.evento_id}|24H`;\n      if(previous.some(p=>p.clave_idempotencia===key&&['ENVIADO','PENDIENTE'].includes(p.estado))) continue;\n      out.push({recordatorio_id:id(),usuario_id:r.usuario_id,evento_id:e.evento_id,inscripcion_id:r.inscripcion_id,tipo_recordatorio:'24H',fecha_programada:now.toISOString(),fecha_envio:'',estado:'PENDIENTE',clave_idempotencia:key});\n    }\n  } return out;\n}\nfunction linkingCode(user,now=new Date()) {\n  return {codigo_id:id(),usuario_id:user.usuario_id,codigo:crypto.randomBytes(8).toString('hex').toUpperCase(),creado_en:now.toISOString(),expira_en:new Date(+now+10*60000).toISOString(),estado:'PENDIENTE',usado_en:''};\n}\nfunction useCode(code,codes,links,users,chatId,username='',now=new Date()) {\n  const row=codes.find(c=>c.codigo===code);\n  if(!row||row.estado!=='PENDIENTE'||!Number.isFinite(Date.parse(row.expira_en))||Date.parse(row.expira_en)<=+now) fail(409,'CODIGO_INVALIDO','Código usado o vencido');\n  if(!users.some(u=>u.usuario_id===row.usuario_id&&u.estado==='ACTIVO')) fail(409,'USUARIO_INACTIVO','Cuenta inactiva');\n  if(links.some(l=>String(l.chat_id)===String(chatId)&&l.usuario_id!==row.usuario_id&&l.estado==='ACTIVA')) fail(409,'CHAT_OCUPADO','Este chat ya está vinculado');\n  return {code:{...row,estado:'USADO',usado_en:now.toISOString()},link:{vinculacion_id:id(),usuario_id:row.usuario_id,chat_id:String(chatId),telegram_username:username,fecha_vinculacion:now.toISOString(),estado:'ACTIVA'}};\n}\n\nconst req=$('Entrada Webhook').first().json;\nconst body=req.body||{};\nconst token=String(req.headers?.authorization||'').replace(/^Bearer\\s+/i,'');\nconst users=$('Leer usuarios').all().map(i=>i.json).filter(u=>u.usuario_id);\nconst sessions=$('Leer sesiones').all().map(i=>i.json).filter(s=>s.session_id);\nlet row=null,result=null,status=200,write=false,audit=null;\ntry {\n\nconst op=body.operacion;\nif(op==='LOGIN') {row=login(body,users);write=true;const u=users.find(u=>u.usuario_id===row.usuario_id);result={ok:true,data:{session_token:row.session_token,expira_en:row.expira_en,usuario:publicUser(u)}};}\nelse if(['VALIDAR','LOGOUT'].includes(op)) {\n const raw=sessions.find(s=>s.session_token===token&&token);\n if(raw&&raw.estado==='ACTIVA'&&(!Number.isFinite(Date.parse(raw.expira_en))||Date.parse(raw.expira_en)<=Date.now())) {row={...raw,estado:'EXPIRADA'};write=true;status=401;result={ok:false,error:{code:'SESION_INVALIDA',message:'Inicia sesión nuevamente'}};}\n else {const {session,user}=validSession(token,sessions,users);row={...session};write=true;\n  if(op==='LOGOUT'){row.estado='CERRADA';row.cerrada_en=new Date().toISOString();result={ok:true,data:{cerrada:true}};}\n  else {row.ultima_validacion=new Date().toISOString();result={ok:true,data:{usuario:publicUser(user),expira_en:row.expira_en}};}\n }\n}else fail(400,'OPERACION_INVALIDA','Operación inválida');\n\n}catch(e){write=false;row=null;status=e.status||500;result={ok:false,error:{code:e.code||'ERROR_INTERNO',message:e.status?e.message:'Error interno'}};}\nreturn [{json:{status,result,write,row,audit}}];\n"
+      },
+      "id": "2e71e67a-394e-4b76-8360-55619b7eca67",
+      "name": "Reglas y respuesta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e90c8217-61cc-48e5-9f7e-9aab5171c8f8",
+              "leftValue": "={{ $json.write }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "0cb3bade-c489-4755-902f-e7b6f29f2459",
+      "name": "Requiere escritura",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        896,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1TMWer72gB16ZRwklXX2e7NmR5ss9ki2l6obEsa4f22k",
+          "mode": "list",
+          "cachedResultName": "EP02_Sesiones",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TMWer72gB16ZRwklXX2e7NmR5ss9ki2l6obEsa4f22k/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1751696660,
+          "mode": "list",
+          "cachedResultName": "Sesiones",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TMWer72gB16ZRwklXX2e7NmR5ss9ki2l6obEsa4f22k/edit#gid=1751696660"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "session_id": "={{ $('Reglas y respuesta').first().json.row.session_id }}",
+            "usuario_id": "={{ $('Reglas y respuesta').first().json.row.usuario_id }}",
+            "session_token": "={{ $('Reglas y respuesta').first().json.row.session_token }}",
+            "creada_en": "={{ $('Reglas y respuesta').first().json.row.creada_en }}",
+            "expira_en": "={{ $('Reglas y respuesta').first().json.row.expira_en }}",
+            "estado": "={{ $('Reglas y respuesta').first().json.row.estado }}",
+            "cerrada_en": "={{ $('Reglas y respuesta').first().json.row.cerrada_en }}",
+            "ultima_validacion": "={{ $('Reglas y respuesta').first().json.row.ultima_validacion }}"
+          },
+          "matchingColumns": [
+            "session_id"
+          ],
+          "schema": [
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "usuario_id",
+              "displayName": "usuario_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "session_token",
+              "displayName": "session_token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "creada_en",
+              "displayName": "creada_en",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "expira_en",
+              "displayName": "expira_en",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "estado",
+              "displayName": "estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "cerrada_en",
+              "displayName": "cerrada_en",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ultima_validacion",
+              "displayName": "ultima_validacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "48e46304-f9b6-4e04-b276-ca2ad22f16f3",
+      "name": "Guardar registro",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1120,
+        368
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dlOSdnI7HAoQaA8d",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $('Reglas y respuesta').first().json.result }}",
+        "options": {
+          "responseCode": "={{ $('Reglas y respuesta').first().json.status }}"
+        }
+      },
+      "id": "6ccf9cec-eb66-43f5-bdbf-e62004b33505",
+      "name": "Responder JSON",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1344,
+        464
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Entrada Webhook": {
+      "main": [
+        [
+          {
+            "node": "Leer usuarios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer usuarios": {
+      "main": [
+        [
+          {
+            "node": "Leer sesiones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer sesiones": {
+      "main": [
+        [
+          {
+            "node": "Reglas y respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reglas y respuesta": {
+      "main": [
+        [
+          {
+            "node": "Requiere escritura",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Requiere escritura": {
+      "main": [
+        [
+          {
+            "node": "Guardar registro",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar registro": {
+      "main": [
+        [
+          {
+            "node": "Responder JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "18c0f336-3a0d-41a2-8144-4c1f1f65ae6a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f3ca317cb1bf5b4488f20623218970c3e653f842a6b6b783f27759d7c0b1bb8f"
+  },
+  "nodeGroups": [],
+  "id": "09HZPor8W5N7yNBf",
+  "tags": []
+}

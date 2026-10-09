@@ -1,0 +1,575 @@
+{
+  "name": "WF01_usuarios_crud",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "usuarios",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "http://localhost:5173"
+        }
+      },
+      "id": "15d0fea0-4d22-4a08-b4bc-e81ce559bff2",
+      "name": "Entrada Webhook Usuarios",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1344,
+        160
+      ],
+      "webhookId": "2ef4834a-99ac-4d99-988b-f94b647a770c"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body=$json.body||{};\nconst operation=String(body.operation||'').trim().toUpperCase();\nconst data=body.data||{};\nconst fail=(status,code,message)=>({valid:false,status,response:{ok:false,data:null,error:{code,message}}});\nif(!['CREATE','READ','UPDATE','DEACTIVATE'].includes(operation)) return [{json:fail(400,'OPERACION_INVALIDA','Usa CREATE, READ, UPDATE o DEACTIVATE.')}];\nif(operation==='CREATE'){\n const nombre=String(data.nombre||'').trim(), email=String(data.email||'').trim().toLowerCase(), password=String(data.password||'');\n if(nombre.length<2||nombre.length>120||!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)||password.length<8||password.length>200) return [{json:fail(400,'DATOS_INVALIDOS','Revisa nombre, email y contraseña.')}];\n data.nombre=nombre; data.email=email; data.password=password;\n}\nif(['READ','UPDATE','DEACTIVATE'].includes(operation)&&!String(data.usuario_id||data.email||'').trim()) return [{json:fail(400,'IDENTIFICADOR_REQUERIDO','Envía usuario_id o email.')}];\nreturn [{json:{valid:true,operation,data,status:200,response:null}}];"
+      },
+      "id": "33d3f15e-ddf7-4063-9efc-bba4b4a76d4d",
+      "name": "Validar solicitud CRUD",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1120,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "562f78a9-120e-4dd8-b967-e27cd56dfea5",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "114bc67f-8918-4e4a-b699-c50e57a5392b",
+      "name": "¿Solicitud válida?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -896,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.response }}",
+        "options": {
+          "responseCode": "={{ $json.status }}"
+        }
+      },
+      "id": "d203f97c-b400-4e1e-97c8-b702e6be0a19",
+      "name": "Responder error de solicitud",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -688,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1tLq1pTBGQlwCty6ex9N7r6KaRMlEq1pLPz--iX8pfGA",
+          "mode": "list",
+          "cachedResultName": "EP01_Usuarios",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1tLq1pTBGQlwCty6ex9N7r6KaRMlEq1pLPz--iX8pfGA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1858583105,
+          "mode": "list",
+          "cachedResultName": "Usuarios",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1tLq1pTBGQlwCty6ex9N7r6KaRMlEq1pLPz--iX8pfGA/edit#gid=1858583105"
+        },
+        "options": {}
+      },
+      "id": "16669324-9743-445f-b6a8-6dbccf03aab1",
+      "name": "Leer Usuarios",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -688,
+        80
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dlOSdnI7HAoQaA8d",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto=require('crypto');\nconst req=$('Validar solicitud CRUD').first().json;\nconst users=$input.all().map(i=>i.json).filter(u=>u.usuario_id);\nconst now=new Date().toISOString();\nconst publicUser=u=>({usuario_id:u.usuario_id,nombre:u.nombre,email:u.email_normalizado,estado:u.estado,fecha_registro:u.fecha_registro,fecha_actualizacion:u.fecha_actualizacion});\nconst fail=(status,code,message)=>({write:false,status,response:{ok:false,data:null,error:{code,message}},audit:null});\nconst audit=(record,action,detail)=>({auditoria_id:'AUD-'+crypto.randomUUID(),usuario_id:record.usuario_id,accion:action,fecha:now,resultado:'OK',detalle:detail});\nconst current=users.find(u=>u.usuario_id===req.data.usuario_id||String(u.email_normalizado||'').toLowerCase()===String(req.data.email||'').trim().toLowerCase());\nlet result;\ntry {\n  if(req.operation==='CREATE') {\n    if(users.some(u=>String(u.email_normalizado||'').toLowerCase()===req.data.email)) result=fail(409,'EMAIL_DUPLICADO','Ya existe un usuario con ese email.');\n    else {\n      const salt=crypto.randomBytes(16).toString('hex');\n      const record={usuario_id:'USR-'+crypto.randomUUID(),nombre:req.data.nombre,email_normalizado:req.data.email,password_hash:crypto.pbkdf2Sync(req.data.password,salt,120000,32,'sha256').toString('hex'),password_salt:salt,estado:'ACTIVO',fecha_registro:now,fecha_actualizacion:now};\n      result={write:true,status:201,record,response:{ok:true,data:publicUser(record),error:null},audit:audit(record,'CREATE','Usuario creado mediante WF01.')};\n    }\n  } else if(!current) result=fail(404,'USUARIO_NO_ENCONTRADO','No se encontró el usuario.');\n  else if(req.operation==='READ') result={write:false,status:200,response:{ok:true,data:publicUser(current),error:null},audit:null};\n  else if(req.operation==='DEACTIVATE') {\n    const record={...current,estado:'INACTIVO',fecha_actualizacion:now};\n    result={write:true,status:200,record,response:{ok:true,data:publicUser(record),error:null},audit:audit(record,'DEACTIVATE','Cuenta desactivada lógicamente.')};\n  } else {\n    const email=req.data.email===undefined?current.email_normalizado:String(req.data.email).trim().toLowerCase();\n    const nombre=req.data.nombre===undefined?current.nombre:String(req.data.nombre).trim();\n    if(!nombre||nombre.length>120||!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) result=fail(400,'DATOS_INVALIDOS','Revisa nombre y email.');\n    else if(users.some(u=>u.usuario_id!==current.usuario_id&&String(u.email_normalizado||'').toLowerCase()===email)) result=fail(409,'EMAIL_DUPLICADO','El email ya pertenece a otra cuenta.');\n    else {\n      const record={...current,nombre,email_normalizado:email,fecha_actualizacion:now};\n      if(req.data.password!==undefined) { const pass=String(req.data.password); if(pass.length<8||pass.length>200) return [{json:fail(400,'PASSWORD_INVALIDA','La contraseña debe tener entre 8 y 200 caracteres.')}]; const salt=crypto.randomBytes(16).toString('hex'); record.password_salt=salt; record.password_hash=crypto.pbkdf2Sync(pass,salt,120000,32,'sha256').toString('hex'); }\n      result={write:true,status:200,record,response:{ok:true,data:publicUser(record),error:null},audit:audit(record,'UPDATE','Perfil actualizado mediante WF01.')};\n    }\n  }\n} catch(error) { result=fail(500,'ERROR_INTERNO','No fue posible procesar la cuenta.'); }\nreturn [{json:result.write?{...result.record,...result}:result}];"
+      },
+      "id": "ce26ae46-9dd8-4482-abbe-3d205f7625c2",
+      "name": "Resolver CRUD, duplicado, hash e ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -464,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f49c6e7f-88c6-489c-9848-70db42b9a588",
+              "leftValue": "={{ $json.write }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5dacf7a4-5d1d-4612-bb0b-69aff7846399",
+      "name": "¿Requiere guardar usuario?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -224,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1tLq1pTBGQlwCty6ex9N7r6KaRMlEq1pLPz--iX8pfGA",
+          "mode": "list",
+          "cachedResultName": "EP01_Usuarios",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1tLq1pTBGQlwCty6ex9N7r6KaRMlEq1pLPz--iX8pfGA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1858583105,
+          "mode": "list",
+          "cachedResultName": "Usuarios",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1tLq1pTBGQlwCty6ex9N7r6KaRMlEq1pLPz--iX8pfGA/edit#gid=1858583105"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "usuario_id": "={{ $json.usuario_id }}",
+            "nombre": "={{ $json.nombre }}",
+            "email_normalizado": "={{ $json.email_normalizado }}",
+            "password_hash": "={{ $json.password_hash }}",
+            "password_salt": "={{ $json.password_salt }}",
+            "estado": "={{ $json.estado }}",
+            "fecha_registro": "={{ $json.fecha_registro }}",
+            "fecha_actualizacion": "={{ $json.fecha_actualizacion }}"
+          },
+          "matchingColumns": [
+            "usuario_id"
+          ],
+          "schema": [
+            {
+              "id": "usuario_id",
+              "displayName": "usuario_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "nombre",
+              "displayName": "nombre",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email_normalizado",
+              "displayName": "email_normalizado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "password_hash",
+              "displayName": "password_hash",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "password_salt",
+              "displayName": "password_salt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "estado",
+              "displayName": "estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fecha_registro",
+              "displayName": "fecha_registro",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fecha_actualizacion",
+              "displayName": "fecha_actualizacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "bee42d14-7232-47c0-a86d-5bd4f5347075",
+      "name": "Guardar Usuario",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        0,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dlOSdnI7HAoQaA8d",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data=$('Resolver CRUD, duplicado, hash e ID').first().json;\nreturn [{json:{...data.audit,status:data.status,response:data.response}}];"
+      },
+      "id": "29de32aa-8e93-4b84-b0f3-8736bb95c356",
+      "name": "Preparar auditoría de usuario",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1tLq1pTBGQlwCty6ex9N7r6KaRMlEq1pLPz--iX8pfGA",
+          "mode": "list",
+          "cachedResultName": "EP01_Usuarios",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1tLq1pTBGQlwCty6ex9N7r6KaRMlEq1pLPz--iX8pfGA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 369924206,
+          "mode": "list",
+          "cachedResultName": "Auditoria_Usuarios",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1tLq1pTBGQlwCty6ex9N7r6KaRMlEq1pLPz--iX8pfGA/edit#gid=369924206"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "auditoria_id",
+              "displayName": "auditoria_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "usuario_id",
+              "displayName": "usuario_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "accion",
+              "displayName": "accion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fecha",
+              "displayName": "fecha",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "resultado",
+              "displayName": "resultado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "detalle",
+              "displayName": "detalle",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "599bbbdc-b77f-462e-be46-a34eabdc7aa5",
+      "name": "Guardar Auditoría Usuario",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        416,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dlOSdnI7HAoQaA8d",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data=$('Resolver CRUD, duplicado, hash e ID').first().json; return [{json:{status:data.status,response:data.response}}];"
+      },
+      "id": "41866c54-931f-4e19-a155-dac86b7c1548",
+      "name": "Preparar respuesta CRUD",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.response }}",
+        "options": {
+          "responseCode": "={{ $json.status }}"
+        }
+      },
+      "id": "9df1c9f2-1b69-4c93-be50-9553878b30cf",
+      "name": "Responder CRUD Usuarios",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        848,
+        80
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Entrada Webhook Usuarios": {
+      "main": [
+        [
+          {
+            "node": "Validar solicitud CRUD",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar solicitud CRUD": {
+      "main": [
+        [
+          {
+            "node": "¿Solicitud válida?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Solicitud válida?": {
+      "main": [
+        [
+          {
+            "node": "Leer Usuarios",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder error de solicitud",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Usuarios": {
+      "main": [
+        [
+          {
+            "node": "Resolver CRUD, duplicado, hash e ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolver CRUD, duplicado, hash e ID": {
+      "main": [
+        [
+          {
+            "node": "¿Requiere guardar usuario?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Requiere guardar usuario?": {
+      "main": [
+        [
+          {
+            "node": "Guardar Usuario",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Preparar respuesta CRUD",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar Usuario": {
+      "main": [
+        [
+          {
+            "node": "Preparar auditoría de usuario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar auditoría de usuario": {
+      "main": [
+        [
+          {
+            "node": "Guardar Auditoría Usuario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar Auditoría Usuario": {
+      "main": [
+        [
+          {
+            "node": "Preparar respuesta CRUD",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar respuesta CRUD": {
+      "main": [
+        [
+          {
+            "node": "Responder CRUD Usuarios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "951b12c7-883e-41e6-a1ba-27753ed50ed7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f3ca317cb1bf5b4488f20623218970c3e653f842a6b6b783f27759d7c0b1bb8f"
+  },
+  "nodeGroups": [],
+  "id": "d2cM5CMMleZPlhXA",
+  "tags": []
+}

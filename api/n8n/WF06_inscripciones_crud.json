@@ -1,0 +1,851 @@
+{
+  "name": "WF06_inscripciones_crud",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "eventpass/inscripciones",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "http://localhost:5173"
+        }
+      },
+      "id": "4f0b41ea-eb4f-4a1e-a459-c5eeb02b1184",
+      "name": "Webhook inscripciones",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -2864,
+        192
+      ],
+      "webhookId": "47a98668-8acd-41c6-b056-0132029ab6db"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1TMWer72gB16ZRwklXX2e7NmR5ss9ki2l6obEsa4f22k",
+          "mode": "list",
+          "cachedResultName": "EP02_Sesiones",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TMWer72gB16ZRwklXX2e7NmR5ss9ki2l6obEsa4f22k/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1751696660,
+          "mode": "list",
+          "cachedResultName": "Sesiones",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TMWer72gB16ZRwklXX2e7NmR5ss9ki2l6obEsa4f22k/edit#gid=1751696660"
+        },
+        "options": {}
+      },
+      "id": "144ff12e-f6b4-423f-b814-09c36ac60f5c",
+      "name": "Leer Sesiones",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -2656,
+        192
+      ],
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dlOSdnI7HAoQaA8d",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1tLq1pTBGQlwCty6ex9N7r6KaRMlEq1pLPz--iX8pfGA",
+          "mode": "list",
+          "cachedResultName": "EP01_Usuarios",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1tLq1pTBGQlwCty6ex9N7r6KaRMlEq1pLPz--iX8pfGA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1858583105,
+          "mode": "list",
+          "cachedResultName": "Usuarios",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1tLq1pTBGQlwCty6ex9N7r6KaRMlEq1pLPz--iX8pfGA/edit#gid=1858583105"
+        },
+        "options": {}
+      },
+      "id": "fa12075b-78c6-4b99-b80e-46549ee66db6",
+      "name": "Leer Usuarios",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -2432,
+        192
+      ],
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dlOSdnI7HAoQaA8d",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "19wpODsMjsygMdibipezwP4oSQnHKiitgpDdyMFGBmT0",
+          "mode": "list",
+          "cachedResultName": "EP03_Telegram",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/19wpODsMjsygMdibipezwP4oSQnHKiitgpDdyMFGBmT0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 424547462,
+          "mode": "list",
+          "cachedResultName": "Vinculaciones",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/19wpODsMjsygMdibipezwP4oSQnHKiitgpDdyMFGBmT0/edit#gid=424547462"
+        },
+        "options": {}
+      },
+      "id": "54ae5514-6edf-4366-a3fb-613d7b304e5c",
+      "name": "Leer Vinculaciones",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -2208,
+        192
+      ],
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dlOSdnI7HAoQaA8d",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1M99hLCOG2oXQ58uNQv6THqmwib18QIS4Rdm_x0uAIuY",
+          "mode": "list",
+          "cachedResultName": "EP04_Eventos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1M99hLCOG2oXQ58uNQv6THqmwib18QIS4Rdm_x0uAIuY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1732330949,
+          "mode": "list",
+          "cachedResultName": "Eventos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1M99hLCOG2oXQ58uNQv6THqmwib18QIS4Rdm_x0uAIuY/edit#gid=1732330949"
+        },
+        "options": {}
+      },
+      "id": "b40a19b2-adeb-4d9b-ba47-36fcd29a001b",
+      "name": "Leer Eventos",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -1984,
+        192
+      ],
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dlOSdnI7HAoQaA8d",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1HRCcg9f-uRn8acRcWgxHHlAuZdWD4YbtbQ-P_nS5Vu0",
+          "mode": "list",
+          "cachedResultName": "EP06_Inscripciones",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HRCcg9f-uRn8acRcWgxHHlAuZdWD4YbtbQ-P_nS5Vu0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 184911048,
+          "mode": "list",
+          "cachedResultName": "Inscripciones",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HRCcg9f-uRn8acRcWgxHHlAuZdWD4YbtbQ-P_nS5Vu0/edit#gid=184911048"
+        },
+        "options": {}
+      },
+      "id": "56ba9f51-e87d-4176-a4a7-e3a9f10f45bf",
+      "name": "Leer Inscripciones",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -1776,
+        192
+      ],
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dlOSdnI7HAoQaA8d",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto=require('crypto');\nconst req=$('Webhook inscripciones').first().json; const body=req.body||{}; const op=String(body.operacion||'').toUpperCase(); const token=String(req.headers?.authorization||'').replace(/^Bearer\\s+/i,''); const now=new Date();\nconst sessions=$('Leer Sesiones').all().map(i=>i.json).filter(r=>r.session_id); const users=$('Leer Usuarios').all().map(i=>i.json).filter(r=>r.usuario_id); const links=$('Leer Vinculaciones').all().map(i=>i.json).filter(r=>r.vinculacion_id); const events=$('Leer Eventos').all().map(i=>i.json).filter(r=>r.evento_id); const rows=$input.all().map(i=>i.json).filter(r=>r.inscripcion_id);\nconst fail=(status,code,message)=>({write:false,notify:false,status,response:{ok:false,data:null,error:{code,message}}});\nconst session=sessions.find(s=>s.session_token===token&&s.estado==='ACTIVA'&&Date.parse(s.expira_en)>+now); const user=session&&users.find(u=>u.usuario_id===session.usuario_id&&u.estado==='ACTIVO'); if(!session||!user)return[{json:fail(401,'SESION_INVALIDA','Inicia sesión nuevamente.')}];\nconst starts=e=>Date.parse(String(e.fecha||'')+'T'+String(e.hora||'00:00')+'-05:00'); const publicRow=r=>({inscripcion_id:r.inscripcion_id,evento_id:r.evento_id,estado:r.estado,fecha_inscripcion:r.fecha_inscripcion,nombre_acreditacion:r.nombre_acreditacion,observaciones:r.observaciones,orden_espera:r.orden_espera}); let out;\nif(op==='READ'){out={write:false,notify:false,status:200,response:{ok:true,data:{inscripciones:rows.filter(r=>r.usuario_id===user.usuario_id).map(publicRow)},error:null}};}\nelse if(!['CREATE','UPDATE','CANCEL'].includes(op))out=fail(400,'OPERACION_INVALIDA','Usa CREATE, READ, UPDATE o CANCEL.');\nelse if(op==='CREATE'){\n if(!links.some(l=>l.usuario_id===user.usuario_id&&l.estado==='ACTIVA'))out=fail(409,'TELEGRAM_REQUERIDO','Vincula Telegram antes de inscribirte.');\n else {const event=events.find(e=>e.evento_id===String(body.evento_id||'')); if(!event)out=fail(404,'EVENTO_NO_EXISTE','No existe el evento.'); else if(event.estado!=='PUBLICADO'||!Number.isFinite(starts(event))||starts(event)<=+now)out=fail(409,'EVENTO_NO_DISPONIBLE','El evento no admite inscripciones.'); else {const active=rows.find(r=>r.usuario_id===user.usuario_id&&r.evento_id===event.evento_id&&['CONFIRMADA','LISTA_ESPERA'].includes(r.estado)); if(active)out={write:false,notify:false,status:200,response:{ok:true,data:{inscripcion:publicRow(active),idempotente:true},error:null}}; else {const confirmed=rows.filter(r=>r.evento_id===event.evento_id&&r.estado==='CONFIRMADA').length;const state=confirmed<Number(event.capacidad)?'CONFIRMADA':'LISTA_ESPERA';const record={inscripcion_id:'INS-'+crypto.randomUUID(),usuario_id:user.usuario_id,evento_id:event.evento_id,estado:state,fecha_inscripcion:now.toISOString(),fecha_actualizacion:now.toISOString(),nombre_acreditacion:String(body.nombre_acreditacion||user.nombre).trim().slice(0,100),observaciones:String(body.observaciones||'').trim().slice(0,500),origen:'WEB',orden_espera:state==='LISTA_ESPERA'?Math.max(0,...rows.filter(r=>r.evento_id===event.evento_id&&r.estado==='LISTA_ESPERA').map(r=>Number(r.orden_espera)||0))+1:''};out={write:true,notify:true,status:201,...record,response:{ok:true,data:{inscripcion:publicRow(record),idempotente:false},error:null},audit:{auditoria_id:'AUD-'+crypto.randomUUID(),inscripcion_id:record.inscripcion_id,usuario_id:user.usuario_id,evento_id:event.evento_id,accion:'CREATE',estado_anterior:'',estado_nuevo:state,fecha:now.toISOString(),resultado:'OK',detalle:'Inscripción creada con cálculo dinámico de cupos.'},notificationPayload:{usuario_id:user.usuario_id,tipo:state==='CONFIRMADA'?'INSCRIPCION_CONFIRMADA':'LISTA_ESPERA',titulo:state==='CONFIRMADA'?'Inscripción confirmada':'Estás en lista de espera',mensaje:state==='CONFIRMADA'?'Tu cupo fue confirmado para '+event.nombre+'.':'Te avisaremos cuando se libere un cupo para '+event.nombre+'.',evento_id:event.evento_id,inscripcion_id:record.inscripcion_id,clave_idempotencia:'ENROLL-'+record.inscripcion_id+'-'+state}};}}}\n} else {const current=rows.find(r=>r.inscripcion_id===String(body.inscripcion_id||'')&&r.usuario_id===user.usuario_id);if(!current)out=fail(404,'INSCRIPCION_NO_EXISTE','No se encontró la inscripción.');else if(op==='CANCEL'){if(current.estado==='CANCELADA')out={write:false,notify:false,status:200,response:{ok:true,data:{inscripcion:publicRow(current),idempotente:true},error:null}};else {const record={...current,estado:'CANCELADA',fecha_actualizacion:now.toISOString()};const event=events.find(e=>e.evento_id===record.evento_id);out={write:true,notify:true,status:200,...record,response:{ok:true,data:{inscripcion:publicRow(record)},error:null},audit:{auditoria_id:'AUD-'+crypto.randomUUID(),inscripcion_id:record.inscripcion_id,usuario_id:user.usuario_id,evento_id:record.evento_id,accion:'CANCEL',estado_anterior:current.estado,estado_nuevo:'CANCELADA',fecha:now.toISOString(),resultado:'OK',detalle:'Cancelación lógica solicitada por el usuario.'},notificationPayload:{usuario_id:user.usuario_id,tipo:'INSCRIPCION_CANCELADA',titulo:'Inscripción cancelada',mensaje:'Tu inscripción'+(event?' para '+event.nombre:'')+' fue cancelada.',evento_id:record.evento_id,inscripcion_id:record.inscripcion_id,clave_idempotencia:'CANCEL-'+record.inscripcion_id}};}} else {const record={...current,nombre_acreditacion:body.nombre_acreditacion===undefined?current.nombre_acreditacion:String(body.nombre_acreditacion).slice(0,100),observaciones:body.observaciones===undefined?current.observaciones:String(body.observaciones).slice(0,500),fecha_actualizacion:now.toISOString()};out={write:true,notify:false,status:200,...record,response:{ok:true,data:{inscripcion:publicRow(record)},error:null},audit:{auditoria_id:'AUD-'+crypto.randomUUID(),inscripcion_id:record.inscripcion_id,usuario_id:user.usuario_id,evento_id:record.evento_id,accion:'UPDATE',estado_anterior:current.estado,estado_nuevo:current.estado,fecha:now.toISOString(),resultado:'OK',detalle:'Datos permitidos de inscripción actualizados.'}};}}\nreturn [{json:out}];"
+      },
+      "id": "740c58f1-8a7b-465c-bad3-37cc838f8ca9",
+      "name": "Validar y preparar inscripción",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1536,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9f1d8a6b-df1b-464e-b727-269b8d05bf85",
+              "leftValue": "={{ $json.write }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d58daba3-3fab-4de8-bac9-99582530e88e",
+      "name": "¿Guardar inscripción?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1280,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1HRCcg9f-uRn8acRcWgxHHlAuZdWD4YbtbQ-P_nS5Vu0",
+          "mode": "list",
+          "cachedResultName": "EP06_Inscripciones",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HRCcg9f-uRn8acRcWgxHHlAuZdWD4YbtbQ-P_nS5Vu0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 184911048,
+          "mode": "list",
+          "cachedResultName": "Inscripciones",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HRCcg9f-uRn8acRcWgxHHlAuZdWD4YbtbQ-P_nS5Vu0/edit#gid=184911048"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "inscripcion_id": "={{ $json.inscripcion_id }}",
+            "usuario_id": "={{ $json.usuario_id }}",
+            "evento_id": "={{ $json.evento_id }}",
+            "estado": "={{ $json.estado }}",
+            "fecha_inscripcion": "={{ $json.fecha_inscripcion }}",
+            "fecha_actualizacion": "={{ $json.fecha_actualizacion }}",
+            "nombre_acreditacion": "={{ $json.nombre_acreditacion }}",
+            "observaciones": "={{ $json.observaciones }}",
+            "origen": "={{ $json.origen }}",
+            "orden_espera": "={{ $json.orden_espera }}"
+          },
+          "matchingColumns": [
+            "inscripcion_id"
+          ],
+          "schema": [
+            {
+              "id": "inscripcion_id",
+              "displayName": "inscripcion_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "usuario_id",
+              "displayName": "usuario_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "evento_id",
+              "displayName": "evento_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "estado",
+              "displayName": "estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fecha_inscripcion",
+              "displayName": "fecha_inscripcion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fecha_actualizacion",
+              "displayName": "fecha_actualizacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "nombre_acreditacion",
+              "displayName": "nombre_acreditacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "observaciones",
+              "displayName": "observaciones",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "origen",
+              "displayName": "origen",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "orden_espera",
+              "displayName": "orden_espera",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "07e1ba29-1b9c-4313-897a-7f6069f5aeca",
+      "name": "Guardar Inscripción",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -1056,
+        80
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dlOSdnI7HAoQaA8d",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const d=$('Validar y preparar inscripción').first().json;return [{json:{...d.audit,status:d.status,response:d.response,notify:d.notify,notificationPayload:d.notificationPayload}}];"
+      },
+      "id": "6d493968-efa5-4a61-a7bd-542028eccec2",
+      "name": "Preparar auditoría inscripción",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -848,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1HRCcg9f-uRn8acRcWgxHHlAuZdWD4YbtbQ-P_nS5Vu0",
+          "mode": "list",
+          "cachedResultName": "EP06_Inscripciones",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HRCcg9f-uRn8acRcWgxHHlAuZdWD4YbtbQ-P_nS5Vu0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1360433467,
+          "mode": "list",
+          "cachedResultName": "Auditoria_Inscripciones",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HRCcg9f-uRn8acRcWgxHHlAuZdWD4YbtbQ-P_nS5Vu0/edit#gid=1360433467"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "auditoria_id",
+              "displayName": "auditoria_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "inscripcion_id",
+              "displayName": "inscripcion_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "usuario_id",
+              "displayName": "usuario_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "evento_id",
+              "displayName": "evento_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "accion",
+              "displayName": "accion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "estado_anterior",
+              "displayName": "estado_anterior",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "estado_nuevo",
+              "displayName": "estado_nuevo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fecha",
+              "displayName": "fecha",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "resultado",
+              "displayName": "resultado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "detalle",
+              "displayName": "detalle",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "a1875216-6fb0-4925-bf6f-b189f0f53ba6",
+      "name": "Guardar Auditoría Inscripción",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -640,
+        80
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dlOSdnI7HAoQaA8d",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const d=$('Validar y preparar inscripción').first().json;return [{json:{...d.notificationPayload,status:d.status,response:d.response,notify:d.notify}}];"
+      },
+      "id": "a1065ac4-9d4b-4949-916a-8b87105e6ce8",
+      "name": "Preparar notificación inscripción",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -432,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "06c106f0-cec5-4a26-aaf3-024386e19825",
+              "leftValue": "={{ $json.notify }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "9172bf1f-948a-48e9-9b32-4a68d2d1bcde",
+      "name": "¿Notificar usuario?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -224,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "PvxtvXzp1WofDBDa",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/PvxtvXzp1WofDBDa",
+          "cachedResultName": "WF09_notificaciones"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "id": "0aa133e0-15c6-4566-a02e-c182017c82bd",
+      "name": "Ejecutar WF09 Notificaciones",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d=$('Validar y preparar inscripción').first().json;return [{json:{status:d.status,response:d.response}}];"
+      },
+      "id": "0bc7448f-4b4d-4dce-945b-30dd53d10dac",
+      "name": "Preparar respuesta inscripción",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.response }}",
+        "options": {
+          "responseCode": "={{ $json.status }}"
+        }
+      },
+      "id": "75705733-5cc6-4ad1-8bb4-e21c1991a3d4",
+      "name": "Responder inscripciones",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        224,
+        192
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook inscripciones": {
+      "main": [
+        [
+          {
+            "node": "Leer Sesiones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Sesiones": {
+      "main": [
+        [
+          {
+            "node": "Leer Usuarios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Usuarios": {
+      "main": [
+        [
+          {
+            "node": "Leer Vinculaciones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Vinculaciones": {
+      "main": [
+        [
+          {
+            "node": "Leer Eventos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Eventos": {
+      "main": [
+        [
+          {
+            "node": "Leer Inscripciones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Inscripciones": {
+      "main": [
+        [
+          {
+            "node": "Validar y preparar inscripción",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar y preparar inscripción": {
+      "main": [
+        [
+          {
+            "node": "¿Guardar inscripción?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Guardar inscripción?": {
+      "main": [
+        [
+          {
+            "node": "Guardar Inscripción",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Preparar respuesta inscripción",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar Inscripción": {
+      "main": [
+        [
+          {
+            "node": "Preparar auditoría inscripción",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar auditoría inscripción": {
+      "main": [
+        [
+          {
+            "node": "Guardar Auditoría Inscripción",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar Auditoría Inscripción": {
+      "main": [
+        [
+          {
+            "node": "Preparar notificación inscripción",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar notificación inscripción": {
+      "main": [
+        [
+          {
+            "node": "¿Notificar usuario?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Notificar usuario?": {
+      "main": [
+        [
+          {
+            "node": "Ejecutar WF09 Notificaciones",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Preparar respuesta inscripción",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ejecutar WF09 Notificaciones": {
+      "main": [
+        [
+          {
+            "node": "Preparar respuesta inscripción",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar respuesta inscripción": {
+      "main": [
+        [
+          {
+            "node": "Responder inscripciones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "301903dd-9cab-41a5-8aee-c0b717dda8ce",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f3ca317cb1bf5b4488f20623218970c3e653f842a6b6b783f27759d7c0b1bb8f"
+  },
+  "nodeGroups": [],
+  "id": "a5k5UtLKyAMKw32Q",
+  "tags": []
+}

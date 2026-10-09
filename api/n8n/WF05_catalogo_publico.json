@@ -1,0 +1,335 @@
+{
+  "name": "WF05_catalogo_publico",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "eventpass/catalogo",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "09e3f189-3c38-4610-8207-8bf150bf4b88",
+      "name": "Webhook catálogo público",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "54197a87-d3da-4bec-ad64-6238d0b6a147"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1M99hLCOG2oXQ58uNQv6THqmwib18QIS4Rdm_x0uAIuY",
+          "mode": "list",
+          "cachedResultName": "EP04_Eventos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1M99hLCOG2oXQ58uNQv6THqmwib18QIS4Rdm_x0uAIuY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1732330949,
+          "mode": "list",
+          "cachedResultName": "Eventos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1M99hLCOG2oXQ58uNQv6THqmwib18QIS4Rdm_x0uAIuY/edit#gid=1732330949"
+        },
+        "options": {}
+      },
+      "id": "b1845e9a-1c98-4302-9778-8b6bb8c378bf",
+      "name": "Leer Eventos",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        224,
+        0
+      ],
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dlOSdnI7HAoQaA8d",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1HRCcg9f-uRn8acRcWgxHHlAuZdWD4YbtbQ-P_nS5Vu0",
+          "mode": "list",
+          "cachedResultName": "EP06_Inscripciones",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HRCcg9f-uRn8acRcWgxHHlAuZdWD4YbtbQ-P_nS5Vu0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 184911048,
+          "mode": "list",
+          "cachedResultName": "Inscripciones",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HRCcg9f-uRn8acRcWgxHHlAuZdWD4YbtbQ-P_nS5Vu0/edit#gid=184911048"
+        },
+        "options": {}
+      },
+      "id": "221015fa-c1de-40b4-bb7a-e9984e3b8ac5",
+      "name": "Leer Inscripciones",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        448,
+        0
+      ],
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dlOSdnI7HAoQaA8d",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\n\nconst req = $('Webhook catálogo público').first().json;\nconst q = req.query || {};\nconst eventId = String(q.evento_id || '').trim();\nconst category = String(q.categoria || '').trim().toLowerCase();\nconst now = Date.now();\n\nconst events = $('Leer Eventos').all().map(item => item.json).filter(event => event.evento_id);\nconst enrollments = $input.all().map(item => item.json).filter(row => row.inscripcion_id);\nconst starts = event => Date.parse(`${String(event.fecha || '')}T${String(event.hora || '00:00')}-05:00`);\nconst normalizeState = value => String(value || '').trim().toUpperCase();\n\n// Se muestran los eventos que pueden ser vistos públicamente.\n// Un BORRADOR queda oculto; CERRADO y CANCELADO se ven, pero no se pueden inscribir.\nconst publicStates = new Set(['PUBLICADO', 'CERRADO', 'CANCELADO']);\nconst visible = events.filter(event => publicStates.has(normalizeState(event.estado)));\nconst filtered = visible.filter(event =>\n  (!eventId || event.evento_id === eventId) &&\n  (!category || String(event.categoria || '').toLowerCase() === category)\n);\n\nconst items = filtered.map(event => {\n  const confirmed = enrollments.filter(row => row.evento_id === event.evento_id && row.estado === 'CONFIRMADA').length;\n  const capacity = Number(event.capacidad) || 0;\n  const remaining = Math.max(0, capacity - confirmed);\n  const future = Number.isFinite(starts(event)) && starts(event) > now;\n  const storedState = normalizeState(event.estado);\n  const visibleState = storedState === 'PUBLICADO' && !future ? 'CERRADO' : storedState;\n\n  return {\n    ...event,\n    estado: visibleState,\n    capacidad: capacity,\n    inscripciones_confirmadas: confirmed,\n    cupos_disponibles: remaining,\n    disponible: visibleState === 'PUBLICADO' && future && remaining > 0,\n  };\n});\n\nconst type = eventId ? 'DETALLE' : category ? 'FILTRO' : 'LISTADO';\nconst status = eventId && items.length === 0 ? 404 : 200;\nconst response = eventId && items.length === 0\n  ? { ok: false, data: null, error: { code: 'EVENTO_NO_VISIBLE', message: 'No hay un evento visible con ese ID.' } }\n  : { ok: true, data: { eventos: items }, error: null };\n\nreturn [{\n  json: {\n    consulta_id: `CAT-${crypto.randomUUID()}`,\n    fecha: new Date().toISOString(),\n    tipo: type,\n    evento_id: eventId,\n    categoria: category,\n    resultado_count: items.length,\n    visitor_id: String(q.visitor_id || ''),\n    status_http: status,\n    status,\n    response,\n  },\n}];"
+      },
+      "id": "3883a214-e614-498e-b8bb-35c8819d2c80",
+      "name": "Calcular catálogo y registro",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        688,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1yyJ9gKFIogmxC29aEAO5UIGl1hwpyX49NBRmSmI0Syo",
+          "mode": "list",
+          "cachedResultName": "EP05_Catalogo_Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1yyJ9gKFIogmxC29aEAO5UIGl1hwpyX49NBRmSmI0Syo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 95069758,
+          "mode": "list",
+          "cachedResultName": "Consultas_Catalogo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1yyJ9gKFIogmxC29aEAO5UIGl1hwpyX49NBRmSmI0Syo/edit#gid=95069758"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "consulta_id",
+              "displayName": "consulta_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fecha",
+              "displayName": "fecha",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tipo",
+              "displayName": "tipo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "evento_id",
+              "displayName": "evento_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "categoria",
+              "displayName": "categoria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "resultado_count",
+              "displayName": "resultado_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "visitor_id",
+              "displayName": "visitor_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status_http",
+              "displayName": "status_http",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "5feeb61a-b2c2-4758-902d-be0aa427e683",
+      "name": "Registrar consulta catálogo",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        912,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "dlOSdnI7HAoQaA8d",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const d=$('Calcular catálogo y registro').first().json;return [{json:{status:d.status,response:d.response}}];"
+      },
+      "id": "5286cb77-16cf-4de3-9e41-e5f8cd430687",
+      "name": "Preparar respuesta catálogo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1152,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.response }}",
+        "options": {
+          "responseCode": "={{ $json.status }}"
+        }
+      },
+      "id": "a4639009-22b6-4fc1-8f21-98760f7468f8",
+      "name": "Responder catálogo público",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1360,
+        0
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook catálogo público": {
+      "main": [
+        [
+          {
+            "node": "Leer Eventos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Eventos": {
+      "main": [
+        [
+          {
+            "node": "Leer Inscripciones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Inscripciones": {
+      "main": [
+        [
+          {
+            "node": "Calcular catálogo y registro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calcular catálogo y registro": {
+      "main": [
+        [
+          {
+            "node": "Registrar consulta catálogo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar consulta catálogo": {
+      "main": [
+        [
+          {
+            "node": "Preparar respuesta catálogo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar respuesta catálogo": {
+      "main": [
+        [
+          {
+            "node": "Responder catálogo público",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "82c43968-9cd6-41c7-a727-7b5b41724554",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f3ca317cb1bf5b4488f20623218970c3e653f842a6b6b783f27759d7c0b1bb8f"
+  },
+  "nodeGroups": [],
+  "id": "ekkhZWMQvEulV3nc",
+  "tags": []
+}
